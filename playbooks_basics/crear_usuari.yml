@@ -1,0 +1,16 @@
+- name: Crear un usuari
+  hosts: srv1
+  become: true
+  tasks:
+  - name: Crear un usuari
+    user:
+      name: "usr_prova"
+      password: "{{ 'usr_prova' | password_hash('sha512') }}"
+      shell: /bin/bash
+      state: present
+
+  - name: Afegir-lo al grup de sudoers
+    user:
+      name: "usr_prova"
+      groups: sudo
+      append: yes
