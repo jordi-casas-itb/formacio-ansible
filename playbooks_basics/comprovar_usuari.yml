@@ -1,0 +1,20 @@
+- name: Crear un usuari
+  hosts: srv1
+  become: true
+  tasks:
+
+  - name: Obtenir tots els usuaris
+    ansible.builtin.getent:
+      database: passwd
+      split: ':'
+
+
+#  - name: Debug getent_passwd
+#    ansible.builtin.debug:
+#      var: getent_passwd
+
+
+  - name: Comprovar si un usuari existeix
+    ansible.builtin.debug:
+      msg: L'usuari existeix
+    when: ( "usr_prova" in getent_passwd.keys() )
