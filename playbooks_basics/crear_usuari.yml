@@ -1,5 +1,5 @@
 - name: Crear un usuari
-  hosts: srv1
+  hosts: srv1_ubuntu
   become: true
   tasks:
   - name: Crear un usuari

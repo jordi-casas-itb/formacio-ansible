@@ -1,6 +1,6 @@
 - name: Crear un usuari
-  hosts: srv1
-  become: true
+  hosts: srv1_ubuntu,srv2_alpine
+  #become: true
   tasks:
 
   - name: Obtenir tots els usuaris
