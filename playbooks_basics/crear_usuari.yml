@@ -1,5 +1,5 @@
 - name: Crear un usuari
-  hosts: srv1_ubuntu
+  hosts: srv1_ubuntu, srv2_alpine
   become: true
   tasks:
   - name: Crear un usuari
@@ -9,8 +9,24 @@
       shell: /bin/bash
       state: present
 
-  - name: Afegir-lo al grup de sudoers
+  - name: Buscar si el sistema utilitza el grup wheel
+    command:
+      cmd: "grep 'wheel' /etc/group"
+    register: result
+    failed_when: result.rc != 0 and result.rc != 1
+    check_mode: false
+    changed_when: false
+
+  - name: Si ha trobat el grup wheel, afegir-lo al grup
+    user:
+      name: "usr_prova"
+      groups: wheel
+      append: yes
+    when: result.rc == 0
+
+  - name: Sino afegir-lo al grup de sudo
     user:
       name: "usr_prova"
       groups: sudo
       append: yes
+    when: result.rc != 0
