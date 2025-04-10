@@ -1,14 +1,25 @@
+# Jordi Casas - 10/04/2025
+# Playbook que crea un usuari i l'afegeix al grup de sudo
 - name: Crear un usuari
-  hosts: srv1_ubuntu, srv2_alpine
+  # A quins hosts aplica
+  hosts: servers
+  # Requereix privilegis d'administrador
   become: true
+  # Fitxer de variables que utilitza
+  vars_files: vars.yml
+
+  # Definició de les tasques a executar
   tasks:
+
+  # Crear l'usuari
   - name: Crear un usuari
     user:
-      name: "usr_prova"
-      password: "{{ 'usr_prova' | password_hash('sha512') }}"
+      name: "{{ usuari }}"
+      password: "{{ password | password_hash('sha512') }}"
       shell: /bin/bash
       state: present
 
+  # Determinar quin és el grup de sudo del sistema
   - name: Buscar si el sistema utilitza el grup wheel
     command:
       cmd: "grep 'wheel' /etc/group"
@@ -17,16 +28,17 @@
     check_mode: false
     changed_when: false
 
+  # Depenent de si utilitza wheel o sudo afegir-lo segons pertoqui
   - name: Si ha trobat el grup wheel, afegir-lo al grup
     user:
-      name: "usr_prova"
+      name: "{{ usuari }}"
       groups: wheel
       append: yes
     when: result.rc == 0
 
   - name: Sino afegir-lo al grup de sudo
     user:
-      name: "usr_prova"
+      name: "{{ usuari }}"
       groups: sudo
       append: yes
     when: result.rc != 0
