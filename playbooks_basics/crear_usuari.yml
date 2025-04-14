@@ -1,5 +1,5 @@
 # Jordi Casas - 10/04/2025
-# Playbook que crea un usuari i l'afegeix al grup de sudo
+# Playbook que crea un usuari i l'afegeix al grup de sudo corresponent en funció del sistema
 - name: Crear un usuari
   # A quins hosts aplica
   hosts: servers
@@ -7,11 +7,14 @@
   become: true
   # Fitxer de variables que utilitza
   vars_files: vars.yml
+  # Definir una variable en funció de la distribució de Linux que indiqui el grup de sudo
+  vars:
+    sudoGroup: "{{ 'sudo' if ansible_facts['os_family'] == 'Debian' else 'wheel' }}"
 
   # Definició de les tasques a executar
   tasks:
 
-  # Crear l'usuari
+  # Crear l'usuari - usuari i password són variables definides en vars.yml
   - name: Crear un usuari
     user:
       name: "{{ usuari }}"
@@ -19,26 +22,8 @@
       shell: /bin/bash
       state: present
 
-  # Determinar quin és el grup de sudo del sistema
-  - name: Buscar si el sistema utilitza el grup wheel
-    command:
-      cmd: "grep 'wheel' /etc/group"
-    register: result
-    failed_when: result.rc != 0 and result.rc != 1
-    check_mode: false
-    changed_when: false
-
-  # Depenent de si utilitza wheel o sudo afegir-lo segons pertoqui
-  - name: Si ha trobat el grup wheel, afegir-lo al grup
+  - name: Afegir l'usuari al grup segons el sistema
     user:
       name: "{{ usuari }}"
-      groups: wheel
+      groups: "{{ sudoGroup }}"
       append: yes
-    when: result.rc == 0
-
-  - name: Sino afegir-lo al grup de sudo
-    user:
-      name: "{{ usuari }}"
-      groups: sudo
-      append: yes
-    when: result.rc != 0

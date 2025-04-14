@@ -1,0 +1,32 @@
+# Jordi Casas - 14/04/2025
+# Playbook que executa un bash script
+- name: Crear un usuari
+  # A quins hosts aplica
+  hosts: servers
+  # Requereix privilegis d'administrador
+  become: false
+  # Fitxer de variables que utilitza
+  vars_files: vars.yml
+
+  # Definició de les tasques a executar
+  tasks:
+
+  # Copiar el fitxer de l'script a executar
+  - name: Copiar el .sh
+    ansible.builtin.copy:
+      src: ./llistar_directoris.sh
+      dest: /home/{{ ansible_user }}/llistar_directoris.sh
+      #owner: foo
+      #group: foo
+      mode: '0555'
+
+  # Executar l'script
+  - name: Executar script llistar directoris
+    ansible.builtin.shell: /home/{{ ansible_user }}/llistar_directoris.sh >> log.txt
+
+  # Copiar el fitxer generat per l'script
+  - name: Copiar el fitxer generat per l'script
+    ansible.builtin.fetch:
+      src:  /home/{{ ansible_user }}/log.txt
+      dest: /tmp/{{ inventory_hostname }}-log.txt
+      flat: yes

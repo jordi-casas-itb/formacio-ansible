@@ -1,0 +1,31 @@
+# Jordi Casas - 14/04/2025
+# Playbook que instal.la i deixa executant un Apache
+- name: Instal.lar apache
+  # A quins hosts aplica
+  hosts: servers
+  # Requereix privilegis d'administrador
+  become: true
+  # Fitxer de variables que utilitza
+  vars_files: vars.yml
+
+  # Definició de les tasques a executar
+  tasks:
+
+    - name: Instal.lar apache depenent del sistema (apk)
+      community.general.apk:
+        name: apache2
+        update_cache: true
+        state: present
+      when: ansible_facts['os_family'] == "Alpine"
+
+    - name: Instal.lar apache depenent del sistema (apt)
+      apt:
+        name: apache2
+        update_cache: yes
+        state: present
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Arrencar el servei
+      ansible.builtin.service:
+        name: apache2
+        state: started
