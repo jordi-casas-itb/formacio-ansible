@@ -1,0 +1,23 @@
+# Jordi Casas - 26/05/2025
+# Playbook que executa diferents accions amb variables
+- name: Treball amb les variables del sistema
+  # A quins hosts aplica
+  hosts: servers
+  # Requereix privilegis d'administrador
+  become: true
+
+  # Definició de les tasques a executar
+  tasks:
+
+  # Llistar les variables facts
+  - name: Llistar les variables facts
+    ansible.builtin.debug:
+      var: ansible_facts
+
+  - name: Accedir només a la família de sistema operatiu
+    ansible.builtin.debug:
+      var: ansible_facts['os_family']
+
+  - name: Accedir només a l'adreça IPv4 definida de la interfície eth1
+    ansible.builtin.debug:
+      var: ansible_facts['eth1']['ipv4']['address']
