@@ -1,0 +1,50 @@
+# Jordi Casas - 24/06/2025
+# Playbook que instal.la un container de Mysql
+---
+- name: Desplegar Base de Dades (MySQL)
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+  tasks:
+
+    - name: Assegurar que el servei de docker està corrent
+      service:
+        name: docker
+        state: started
+      become: true
+
+    - name: Aturar i eliminar contenidor MySQL existent (si n'hi ha)
+      community.docker.docker_container:
+        name: my_mysql_db
+        state: absent
+        docker_host: "unix:///var/run/docker.sock"
+      ignore_errors: true # En cas que el contenidor no existeixi
+      become: yes
+
+    - name: Crear directori per a dades de MySQL
+      ansible.builtin.file:
+        path: /opt/mysql_data
+        state: directory
+        # MySQL recomana permisos 700 per al directori de dades
+        mode: '0700'
+        owner: '999' # UID per defecte de l'usuari mysql en moltes imatges Docker
+        group: '999' # GID per defecte de l'usuari mysql en moltes imatges Docker
+      become: yes
+
+    - name: Executar contenidor MySQL
+      community.docker.docker_container:
+        name: my_mysql_db
+        image: mysql:8.0 #En aquest cas es treballa amb la versió 8.0
+        state: started
+        env:
+          MYSQL_ROOT_PASSWORD: mysecretrootpassword # Caldrà guardar-lo a Ansible Vault.
+          MYSQL_DATABASE: mydatabase
+          MYSQL_USER: myuser
+          MYSQL_PASSWORD: mysecretpassword # Caldrà guardar-lo a Ansible Vault.
+        ports:
+          - "3306:3306" # Port per defecte de MySQL
+        volumes:
+          - "/opt/mysql_data:/var/lib/mysql" # Volum per a la persistència de dades
+        restart_policy: always
+        docker_host: "unix:///var/run/docker.sock"
+      become: yes

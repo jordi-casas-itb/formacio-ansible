@@ -1,0 +1,41 @@
+# Jordi Casas - 24/046/2025
+# Tasques per a fer la instal.lació de Ngnix i configurar una pàgina inicial
+---
+- name: Crear directori per als fitxers HTML de Nginx
+  ansible.builtin.file:
+    path: /opt/nginx_html
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: Desplegar el fitxer index.html
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /opt/nginx_html/index.html
+    mode: '0644'
+  become: yes
+
+- name: Assegurar que el servei de docker està corrent
+  service:
+    name: docker
+    state: started
+  become: true
+
+- name: Aturar i eliminar contenidor Nginx existent (si n'hi ha)
+  community.docker.docker_container:
+    name: my_nginx_web
+    state: absent
+  ignore_errors: true # En cas que el contenidor no existeixi
+  become: yes
+
+- name: Executar contenidor Nginx
+  community.docker.docker_container:
+    name: my_nginx_web
+    image: nginx:latest
+    state: started
+    ports:
+      - "80:80"
+    volumes:
+      - "/opt/nginx_html:/usr/share/nginx/html:ro"
+    restart_policy: always
+  become: yes
