@@ -4,7 +4,7 @@
   # A quins hosts aplica
   hosts: servers
   # Fitxer de variables que utilitza
-  vars_files: vars.yml
+  vars_files: servers.yml
 
   tasks:
   # Obtenir els usuaris
