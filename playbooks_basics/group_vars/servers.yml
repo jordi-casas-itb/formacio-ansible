@@ -2,3 +2,4 @@
 usuari: usr_prova
 password: temporal
 clau_usuari_prova: "{{ lookup('file', lookup('env','HOME') + '/.ssh/clau_usuari_prova.pub') }}"
+codi_index_html: "{{ lookup('env','HOME') + '/formacio-ansible/codi_html/index1.html' }}"

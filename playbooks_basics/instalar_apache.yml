@@ -5,8 +5,6 @@
   hosts: servers
   # Requereix privilegis d'administrador
   become: true
-  # Fitxer de variables que utilitza
-  vars_files: vars.yml
 
   # Definició de les tasques a executar
   tasks:

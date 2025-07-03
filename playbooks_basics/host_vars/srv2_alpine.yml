@@ -1,0 +1,6 @@
+# Variables per a la BBDD
+db_user: "usuari_db"
+db_password: "password_db"
+db_root_password: "password_root_db"
+db_name: "lamevabd"
+db_remote_access_host: "%"

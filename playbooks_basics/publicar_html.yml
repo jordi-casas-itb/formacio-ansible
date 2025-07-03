@@ -1,0 +1,31 @@
+# Jordi Casas - 03/07/2025
+# Playbook que distribuieix codi html a servidor web
+- name: Crear un usuari
+  # A quins hosts aplica
+  hosts: servers
+  # Requereix privilegis d'administrador
+  become: true
+  # Definir una variable en funció de la distribució de Linux que indiqui el grup de sudo
+  vars:
+    srv_html_folder: "{{ '/var/www/html' if ansible_facts['os_family'] == 'Debian' else '/var/www/localhost/htdocs' }}"
+
+  # Definició de les tasques a executar
+  tasks:
+
+  # Copiar un index.html al servidor
+  - name: Copiar index.html
+    ansible.builtin.copy:
+      src: "{{ codi_index_html }}"
+      dest: "{{ srv_html_folder }}/index.html"
+      owner: root
+      group: root
+      mode: '0644'
+    # Aplicar un notificador perquè s'executi la tasca de reinici del servidor si s'ha copiat el fitxer
+    notify: Reiniciar servei Apache
+
+  # Tasca de reinici si s'invoca amb un notify
+  handlers:
+    - name: Reiniciar servei Apache
+      ansible.builtin.service:
+        name: apache2
+        state: restarted

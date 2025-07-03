@@ -1,0 +1,29 @@
+-- templates/my_database_setup.sql.j2
+
+USE {{ db_name }};
+
+CREATE TABLE IF NOT EXISTS productes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(255) NOT NULL,
+    descripcio TEXT,
+    preu DECIMAL(10, 2) NOT NULL
+);
+
+-- Inserir dades de mostra només si la taula està buida
+INSERT INTO productes (nom, descripcio, preu)
+SELECT * FROM (SELECT 'Ordinador Portàtil', 'Potent ordinador per a tasques diàries.', 999.99) AS tmp
+WHERE NOT EXISTS (
+    SELECT 1 FROM productes WHERE nom = 'Ordinador Portàtil'
+);
+
+INSERT INTO productes (nom, descripcio, preu)
+SELECT * FROM (SELECT 'Teclat Mecànic', 'Teclat amb interruptors tàctils.', 75.00) AS tmp
+WHERE NOT EXISTS (
+    SELECT 1 FROM productes WHERE nom = 'Teclat Mecànic'
+);
+
+INSERT INTO productes (nom, descripcio, preu)
+SELECT * FROM (SELECT 'Ratolí Inalàmbric', 'Ratolí ergonòmic amb bateria de llarga durada.', 25.50) AS tmp
+WHERE NOT EXISTS (
+    SELECT 1 FROM productes WHERE nom = 'Ratolí Inalàmbric'
+);

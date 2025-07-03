@@ -1,0 +1,112 @@
+# Jordi Casas - 03/07/2025
+# Playbook que instal.la i deixa executant un MariaDB en un servidor Alpine
+# També instal.la les taules d'una BBDD d'exemple
+
+- name: Instal.lar MariaDB
+  # Indicar que només aplica al servidor Alpine
+  hosts: srv2_alpine
+  # Requereix privilegis d'administrador
+  become: true
+
+  # Definició de les tasques a executar
+  tasks:
+
+  # Instal.lar els paquets necessaris
+  - name: Instal.lar mariadb al servidor Alpine
+    community.general.apk:
+      name:
+        - mariadb
+        - mariadb-client
+        - py3-mysqlclient # Necessari perquè es pugui executar el mòdul d'ansible
+      update_cache: true
+      state: latest
+
+  # Per defecte el directori no està inicialitzat i cal executar aquest script
+  - name: Inicialitzar la base de dades
+    ansible.builtin.command: mysql_install_db --user=mysql --datadir=/var/lib/mysql
+
+  # Assegurar que el servei de MariaDB està arrencat
+  - name: Arrencar el servei
+    ansible.builtin.service:
+      name: mariadb
+      state: started
+
+  # Definir una contrasenya per a root.
+  # La informació la llegeix del fitxer de variables del servidor
+  - name: Informar la contrasenya de root
+    community.mysql.mysql_user:
+      name: root
+      host: localhost
+      password: "{{ db_root_password }}"
+      state: present
+    # Cal ignorar els errors perquè si estorna a exeuctar el playbook la contrasenya ja
+    # està canviada i dona un error (inicialment root de MariaDB no té password)
+    ignore_errors: true
+
+  # Crear una BBDD
+  - name: Crear la base de dades
+    community.mysql.mysql_db:
+      name: "{{ db_name }}"
+      state: present
+      login_user: root
+      login_password: "{{ db_root_password }}"
+
+  # Crear l'usuari que es connectarà a la taula i els privilegis
+  - name: Crear usuari de base de dades i assignar privilegis
+    community.mysql.mysql_user:
+      name: "{{ db_user }}"
+      password: "{{ db_password }}"
+      # Indicar que es podrà connectar des de qualsevol IP d'origen
+      host: "{{ db_remote_access_host }}"
+      # Assignar els privilegis a tota la BBDD creada
+      priv: "{{ db_name }}.*:ALL"
+      state: present
+      login_user: root
+      login_password: "{{ db_root_password }}"
+
+  # Crear un script que inicialitza la BBDD amb dades de mostra
+  - name: Desplegar script SQL per crear la taula i dades de mostra
+    ansible.builtin.template:
+      src: templates/my_database_setup.sql.j2
+      dest: /tmp/my_database_setup.sql
+      mode: '0644'
+
+  # Executar la càrrega de l'script
+  - name: Executar script SQL per crear la taula i dades de mostra
+    community.mysql.mysql_db:
+      name: "{{ db_name }}"
+      state: import
+      target: /tmp/my_database_setup.sql
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+
+  # Eliminar el fitxer temporal que s'ha creat
+  - name: Eliminar el fitxer SQL temporal
+    ansible.builtin.file:
+      path: /tmp/my_database_setup.sql
+      state: absent
+
+  # Canviar el servei de BBDD perquè accepti peticions per xarxa (qualsevol interfície)
+  - name: Configurar MariaDB per escoltar en totes les interfícies de xarxa
+    ansible.builtin.lineinfile:
+      # Adequar a quin fitxer de configuració cal actualitzar
+      path: /etc/my.cnf.d/mariadb-server.cnf
+      regexp: '^#?\s*bind-address'
+      # Busca la línia del bind que està comentada i la descomenta
+      line: 'bind-address=0.0.0.0'
+      backup: yes # Crear un backup del fitxer original
+
+  # Perquè es pugui accedir per xarxa, cal que es comenti la línia skip-networking
+  - name: Habilitar la connectivitat per xarxa
+    ansible.builtin.lineinfile:
+      path: /etc/my.cnf.d/mariadb-server.cnf # Aquesta és la ruta del fitxer de configuració
+      regexp: '^skip-networking'
+      line: '#skip-networking'
+      backup: yes # Crear un backup del fitxer original
+
+  # Per últim reiniciar el servei
+  - name: Reiniciar MariaDB
+    ansible.builtin.service:
+      name: mariadb
+      state: restarted
