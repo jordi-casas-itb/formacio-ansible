@@ -1,0 +1,71 @@
+# Jordi Casas - 03/07/2025
+# Playbook que distribuieix codi html a servidor web
+- name: Crear un usuari
+  # A quins hosts aplica
+  hosts: srv1_ubuntu
+  # Requereix privilegis d'administrador
+  become: true
+
+  vars_files:
+    - host_vars/srv2_alpine.yml
+  vars:
+    web_root_dir: "/var/www/html"
+
+  # Definició de les tasques a executar
+  tasks:
+
+  # Instal.lar els paquets de php i mysql al servidor web
+  - name: Instal·lar PHP i mòduls essencials per MySQL
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - php
+      - libapache2-mod-php
+      - php-mysql
+      - php-cli
+      - php-mbstring
+      - php-xml
+
+  - name: Configurar l'arxiu de configuració de PHP per a Apache
+    ansible.builtin.lineinfile:
+      path: /etc/apache2/mods-enabled/dir.conf
+      regexp: '^\s*DirectoryIndex'
+      line: '        DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm'
+    notify: Reiniciar Apache
+
+  - name: Habilitar el mòdul rewrite d'Apache
+    ansible.builtin.apache2_module:
+      name: rewrite
+      state: present
+    notify: Reiniciar Apache
+
+  - name: Configurar Apache per permetre .htaccess a /var/www/html
+    ansible.builtin.blockinfile:
+      path: /etc/apache2/apache2.conf
+      block: |
+        <Directory /var/www/html>
+            Options Indexes FollowSymLinks
+            AllowOverride All
+            Require all granted
+        </Directory>
+      marker: "# {mark} ANSIBLE MANAGED BLOCK FOR /var/www/html"
+    notify: Reiniciar Apache
+
+  - name: Desplegar index.php
+    ansible.builtin.copy:
+      src: ../codi_html/index.php
+      dest: "{{ web_root_dir }}/index.php"
+      mode: '0644'
+
+  - name: Desplegar db_config.php (actualitzant amb les variables d'Ansible)
+    ansible.builtin.template:
+      src: ../codi_html/db_config.php.j2 # Utilitzem .j2 per a la plantilla
+      dest: "{{ web_root_dir }}/db_config.php"
+      mode: '0644'
+
+  handlers:
+  - name: Reiniciar Apache
+    ansible.builtin.service:
+      name: apache2
+      state: restarted

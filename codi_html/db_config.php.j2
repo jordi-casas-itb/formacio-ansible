@@ -1,0 +1,20 @@
+<?php
+// files/db_config.php.j2
+
+$servername = "{{ db_server }}";
+$username = "{{ db_user }}";
+$password = "{{ db_password }}";
+$dbname = "{{ db_name }}";
+
+// Crear connexió
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Comprovar la connexió
+if ($conn->connect_error) {
+    die("La connexió ha fallat: " . $conn->connect_error);
+}
+
+// Opcional: Establir el conjunt de caràcters per defecte a UTF-8
+$conn->set_charset("utf8");
+
+?>
