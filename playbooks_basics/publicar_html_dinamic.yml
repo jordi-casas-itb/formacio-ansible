@@ -27,13 +27,16 @@
       - php-mbstring
       - php-xml
 
+  # Modificar la configuració del servidor perquè accepti PHP
   - name: Configurar l'arxiu de configuració de PHP per a Apache
     ansible.builtin.lineinfile:
       path: /etc/apache2/mods-enabled/dir.conf
       regexp: '^\s*DirectoryIndex'
       line: '        DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm'
+    # Invocar el handler que reinicia el servei
     notify: Reiniciar Apache
 
+  # Habilitar el mòdul rewrite
   - name: Habilitar el mòdul rewrite d'Apache
     ansible.builtin.apache2_module:
       name: rewrite
@@ -52,18 +55,21 @@
       marker: "# {mark} ANSIBLE MANAGED BLOCK FOR /var/www/html"
     notify: Reiniciar Apache
 
+  # Copiar el codi html, en aquest cas index.php
   - name: Desplegar index.php
     ansible.builtin.copy:
       src: ../codi_html/index.php
       dest: "{{ web_root_dir }}/index.php"
       mode: '0644'
 
+  # Desplegar el codi de configuracio a la BBDD
   - name: Desplegar db_config.php (actualitzant amb les variables d'Ansible)
     ansible.builtin.template:
       src: ../codi_html/db_config.php.j2 # Utilitzem .j2 per a la plantilla
       dest: "{{ web_root_dir }}/db_config.php"
       mode: '0644'
 
+  # Definició del handler que fa un reinici del servei i que s'invoca des de diferents tasques
   handlers:
   - name: Reiniciar Apache
     ansible.builtin.service:

@@ -11,6 +11,13 @@
   # Definició de les tasques a executar
   tasks:
 
+  # Habilitar el repositori community al fitxer /etc/apk/repositories
+  - name: Habilitar el repositori community
+    ansible.builtin.lineinfile:
+      path: /etc/apk/repositories # Aquesta és la ruta del fitxer de configuració dels repos
+      regexp: '^#http://mirror.ungleich.ch/mirror/packages/alpine/v3.21/community'
+      line: 'http://mirror.ungleich.ch/mirror/packages/alpine/v3.21/community'
+
   # Instal.lar els paquets necessaris
   - name: Instal.lar mariadb al servidor Alpine
     community.general.apk:
@@ -56,8 +63,10 @@
     community.mysql.mysql_user:
       name: "{{ db_user }}"
       password: "{{ db_password }}"
+      # TBD - Si la primera execució no es fa amb localhost no funciona
+      host: localhost
       # Indicar que es podrà connectar des de qualsevol IP d'origen
-      host: "{{ db_remote_access_host }}"
+      #host: "{{ db_remote_access_host }}"
       # Assignar els privilegis a tota la BBDD creada
       priv: "{{ db_name }}.*:ALL"
       state: present

@@ -5,7 +5,7 @@
   hosts: servers
   # Requereix privilegis d'administrador
   become: true
-  # Definir una variable en funció de la distribució de Linux que indiqui el grup de sudo
+  # Definir una variable que indiqui la ubicació del codi html en funció del servidor
   vars:
     srv_html_folder: "{{ '/var/www/html' if ansible_facts['os_family'] == 'Debian' else '/var/www/localhost/htdocs' }}"
 
