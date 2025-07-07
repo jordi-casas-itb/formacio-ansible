@@ -1,0 +1,46 @@
+# Jordi Casas - 07/07/2025
+# Playbook que a partir d'un CSV crea usuaris al sistema (sense privilegis)
+
+- name: Crear un usuari
+  # A quins hosts aplica
+  hosts: servers
+  # Requereix privilegis d'administrador
+  become: true
+
+  # Definició de les tasques a executar
+  tasks:
+
+  # Llegir un CSV (, delimitador) que no ha de contenir header amb els valors del 
+  #nom de l'usuari, shell i password en clar
+  - name: Llegir els usuaris del CSV
+    community.general.read_csv:
+      path: usuaris.csv
+      fieldnames: Nom,Shell,Password
+      delimiter: ','
+    # Es defineix una variable que serà accessible per les altres tasques
+    register: usuaris
+    # Aquesta tasca no requereix de privilegis per executar-se
+    become: no
+    # S'ha d'executar només al node manager
+    delegate_to: localhost
+
+  # Tasca per a fer un debug del resulat llegit del CSV
+  - name: Mostrar el contingut del CSV
+    ansible.builtin.debug:
+      msg: "{{ usuaris }}"
+    become: no
+    delegate_to: localhost
+
+  # Tasca que fa la creació dels usuaris
+  - name: Crear o actualitzar els usuaris del sistema
+    ansible.builtin.user:
+      name: "{{ item.Nom }}"
+      shell: "{{ item.Shell | default('/bin/bash') }}" # Es posa per defecte /bin/bash si no està informat al CSV
+      password: "{{ item.Password | password_hash('sha512') }}" # Crear el hash a partir del password en clar
+      state: present # Assegura que l'usuari existeix
+    # Evitar que es mostri per pantalla la sortida
+    no_log: true
+    # Iterar tots els valors passats
+    loop: "{{ usuaris.list }}"
+    # Condició per saltar si el nom de l'usuari és buit o la línia no és vàlida
+    when: item.Nom is defined and item.Nom | length > 0
