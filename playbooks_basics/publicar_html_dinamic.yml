@@ -6,6 +6,7 @@
   # Requereix privilegis d'administrador
   become: true
 
+  # Agafa les variables de la BBDD configurades al fitxer de variables del servidor
   vars_files:
     - host_vars/srv2_alpine.yml
   vars:
