@@ -1,0 +1,12 @@
+# Jordi Casas - 24/06/2025
+# Playbook que instal.la Docker a tots els servidors
+# Invoca el rol creat amb les tasques d'instal.lació
+
+- name: Instal·lar Docker en tots els servidors
+  hosts: all
+  become: yes
+
+  # Invoca les tasques creades al rol
+  roles:
+    - instalar_docker
+

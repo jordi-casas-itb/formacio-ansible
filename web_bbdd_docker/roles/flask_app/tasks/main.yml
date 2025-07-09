@@ -1,0 +1,60 @@
+# Jordi Casas - 06/07/2025
+# Tasques a realitzar per al desplegament
+---
+- name: Assegurar-se que el directori de l'aplicació existeix
+  ansible.builtin.file:
+    path: "{{ app_directory }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Llistar les variables facts
+  ansible.builtin.debug:
+    var: db_user
+
+- name: Copiar Dockerfile al directori de l'aplicació
+  ansible.builtin.template:
+    src: Dockerfile.j2
+    dest: "{{ app_directory }}/Dockerfile"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Copiar codi de l'aplicació Python (app.py) al directori
+  ansible.builtin.template:
+    src: app.py.j2
+    dest: "{{ app_directory }}/app.py"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Copiar requeriments Python al directori
+  ansible.builtin.template:
+    src: requirements.txt.j2
+    dest: "{{ app_directory }}/requirements.txt"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Copiar configuració Nginx al directori de l'aplicació
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ app_directory }}/nginx.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Copiar fitxer docker-compose.yml al directori de l'aplicació
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ app_directory }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Canviar directori a l'aplicació i construir/iniciar contenidors Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_directory }}"
+    state: present
+    build: always # Construirà la imatge de Flask_app si no existeix o ha canviat

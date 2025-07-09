@@ -1,0 +1,94 @@
+# Codi generat amb Gemini
+# Jordi Casas 06/07/25
+
+import os
+import mysql.connector
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+# Configuració de la BBDD des de variables d'entorn
+DB_HOST = os.environ.get('MYSQL_HOST', 'db')
+DB_USER = os.environ.get('MYSQL_USER', 'myuser')
+DB_PASSWORD = os.environ.get('MYSQL_PASSWORD', 'mypassword')
+DB_NAME = os.environ.get('MYSQL_DATABASE', 'mydatabase')
+
+@app.route('/')
+def index():
+    data = []
+    try:
+        mydb = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME
+        )
+        mycursor = mydb.cursor()
+
+        mycursor.execute("CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, text VARCHAR(255))")
+        mydb.commit()
+
+        message_to_insert = "Hola2 des de Flask!"
+        mycursor.execute("INSERT INTO messages (text) VALUES (%s)", (message_to_insert,))
+        mydb.commit()
+
+        mycursor.execute("SELECT id, text FROM messages ORDER BY id DESC LIMIT 10")
+        data = mycursor.fetchall()
+
+    except mysql.connector.Error as err:
+        return render_template_string("<h1>Error de BBDD</h1><p>str(err)</p>", error=str(err))
+    finally:
+        if 'mydb' in locals() and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
+    # --- INICI DEL BLOC RAW D'ANSIBLE ---
+    # El bloc es defineix perquè no intepreti com a codi d'Ansible
+    {% raw %}
+    template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Aplicació Flask amb MySQL</title>
+        <style>
+            body { font-family: sans-serif; margin: 2em; background-color: #f4f4f4; color: #333; }
+            h1 { color: #0056b3; }
+            table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #0056b3; color: white; }
+            tr:nth-child(even) { background-color: #f2f2f2; }
+        </style>
+    </head>
+    <body>
+        <h1>Missatges de la Base de Dades</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Missatge</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2">No hi ha missatges a la base de dades.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p>Aquesta pàgina s'ha generat des del servidor {{ os.uname().nodename }}</p>
+    </body>
+    </html>
+    """
+    {% endraw %}
+    # --- FINAL DEL BLOC RAW D'ANSIBLE ---
+
+    return render_template_string(template, data=data, os=os)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

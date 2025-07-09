@@ -1,0 +1,15 @@
+# Jordi Casas - 24/06/2025
+# Playbook que desplega l'aplicació amb els containers
+
+- name: Desplegar aplicació Flask amb Nginx i MariaDB en Docker Compose
+  hosts: all
+  become: yes
+
+  # Definició de variables específiques
+  vars:
+    nginx_server_name: "{{ ansible_fqdn | default(inventory_hostname) }}" # Usa el FQDN o el nom de l'host
+    app_directory: "/opt/my_flask_app" # Directori on es desplegarà el codi al servidor remot
+
+  # Invoca les tasques que estan al rol de desplegar
+  roles:
+    - flask_app
