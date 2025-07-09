@@ -1,0 +1,18 @@
+# Jordi Casas - 07/07/2025
+# Playbook que copia el contingut del directori dades als equips remots
+
+- name: Copiar un directori al servidor remot
+  hosts: servers
+  become: yes
+
+  tasks:
+
+  # El directori dades ha d'estar creat al directori local del manager
+  - name: Copiar directori dades a /opt/dades'
+    ansible.builtin.copy:
+      src: dades
+      dest: /opt/dades/   # Es copiarà a 
+      owner: "{{ usuari }}"
+      group: "{{ usuari }}"
+      mode: '0750'
+      directory_mode: '0750' # Informar perquè el directori quedi amb els permisos correctes
