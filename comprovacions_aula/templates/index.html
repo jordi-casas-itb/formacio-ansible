@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor d'Inventari Ansible</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        form div {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .inventory-display {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 30px;
+            white-space: pre-wrap; /* Per respectar els salts de línia del fitxer */
+            font-family: monospace;
+            border: 1px solid #ced4da;
+            max-height: 300px; /* Limita l'alçada del contingut */
+            overflow-y: auto; /* Afegeix scroll si el contingut és massa llarg */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestor d'Inventari Ansible</h1>
+
+        {% if message %}
+            <div class="message">{{ message }}</div>
+        {% endif %}
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <h2>Afegir Nou Servidor</h2>
+        <form method="POST" action="{{ url_for('index') }}">
+            <div>
+                <label for="server">Nom del Servidor (Grup):</label>
+                <input type="text" id="server" name="server" required>
+            </div>
+            <div>
+                <label for="ip">Adreça IP:</label>
+                <input type="text" id="ip" name="ip" required>
+            </div>
+            <div>
+                <label for="usuari">Usuari SSH:</label>
+                <input type="text" id="usuari" name="usuari" required>
+            </div>
+            <div>
+                <label for="contrasenya">Contrasenya SSH:</label>
+                <input type="password" id="contrasenya" name="contrasenya" required>
+            </div>
+            <button type="submit">Afegir Servidor</button>
+        </form>
+
+        <hr>
+
+        <h2>Contingut Actual de l'Inventari ({{ inventory_lines|length }} línies)</h2>
+        <div class="inventory-display">
+            {% if inventory_lines %}
+                {% for line in inventory_lines %}
+                    {{ line }}
+                {% endfor %}
+            {% else %}
+                <p>L'inventari està buit o no s'ha pogut carregar.</p>
+            {% endif %}
+        </div>
+        <p style="text-align: center; font-size: 0.9em; margin-top: 20px;">
+            **Nota de Seguretat**: L'ús de contrasenyes en text pla en l'inventari no és recomanat per a producció.
+            Considereu usar claus SSH o Ansible Vault.
+        </p>
+    </div>
+</body>
+</html>
