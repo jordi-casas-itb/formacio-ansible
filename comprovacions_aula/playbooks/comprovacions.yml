@@ -1,0 +1,86 @@
+# Jordi Casas - 11/07/2025 (inspired by Gemini)
+# Playbook que realitza diferents comprovacions als sistemes
+# Playbook realitzat a mode d'exemple.
+
+- name: Revisar configuracio d'usuaris al sistema
+  hosts: all # Aquí caldria especificar els que es vol fer el check
+  become: yes
+
+  # Variables del propi playbook que es defineix de check
+  vars:
+    expected_user: "jordi"
+
+  # Importa les tasques a realitzar. Aquestes estan ubicades dins del directori tasks
+  tasks:
+
+  # Comprovar usuari
+  - name: Importar tasques verificació usuari
+    ansible.builtin.import_tasks: ../tasks/users/check_user_exists.yml
+
+  # Comprovar port mysql
+  - name: Importar tasques verificació port
+    ansible.builtin.import_tasks: ../tasks/ports/port_opened.yml
+    vars:
+      expected_port: 3306
+
+  # Comprovar port http
+  - name: Importar tasques verificació port
+    ansible.builtin.import_tasks: ../tasks/ports/port_opened.yml
+    vars:
+      expected_port: 80
+
+  # Comprovar port ssh
+  - name: Importar tasques verificació port
+    ansible.builtin.import_tasks: ../tasks/ports/port_opened.yml
+    vars:
+      expected_port: 5000
+
+  # Comprovar si /opt/dades existeix
+  - name: Obtenir informació del directori '/opt/dades'
+    ansible.builtin.import_tasks: ../tasks/folders/folder_exists.yml
+    vars:
+      expected_folder: /opt/dades
+
+  # Comprovar si /opt/dades existeix i té permisos '0755'
+  - name: Obtenir informació del directori '/opt/dades'
+    ansible.builtin.import_tasks: ../tasks/folders/folders_permissions.yml
+    vars:
+      expected_folder: /opt/dades
+      expected_permissions: '0755'
+
+  # Generar la taula de resum per a cada check
+  - name: Preparar informe de revisió en format taula
+    ansible.builtin.set_fact:
+      review_summary_table: |
+        Resultats de la Revisió per a {{ inventory_hostname }} ({{ ansible_host }}):
+        ----------------------------------------------------------------------------------------------------
+        | Comprovació                                    | Estat
+        ----------------------------------------------------------------------------------------------------
+        | Usuari jordi existeix                          | {{ 'OK' if user_found else 'ERROR' }}
+        | Port de mysql arrencat                         | {{ 'OK' if port_up_3306 else 'ERROR' }}
+        | Port apache arrencat                           | {{ 'OK' if port_up_80 else 'ERROR' }}
+        | Port Flask arrencat                            | {{ 'OK' if port_up_5000 else 'ERROR' }}
+        | Existeix el directori /opt/dades               | {{ 'OK' if folder_exists_opt_dades else 'ERROR' }}
+        | Permisos a /opt/dades 0755                     | {{ 'OK' if folder_permissions_opt_dades else 'ERROR' }}
+        ----------------------------------------------------------------------------------------------------
+
+  # Guardar el timestamp de la generació del fitxer. Es fa servir quan s'envia a la màquina d'origen per saber els resultats
+  # El fitxer es guarda a la home de l'usuari que executa el playbook.
+  - name: Definir el nom del fitxer amb data i hora (format YYYYMMDD_HHMMSS)
+    ansible.builtin.set_fact:
+      filename_with_timestamp: "{{ inventory_hostname }}_report_{{ now().strftime('%Y%m%d_%H%M%S') }}.txt"
+
+  # Guardar l'informe en local a l'equip gestor d'Ansible
+  - name: Desar informe a fitxer local (format taula)
+    ansible.builtin.copy:
+      content: "{{ review_summary_table }}"
+      dest: "../resultats/{{ inventory_hostname }}_report.txt"
+    delegate_to: localhost
+    become: no
+
+  # Fer una còpia del fitxer de resultats a la màquina remota
+  - name: Copiar els resultats a l'equip origen a la home usuari
+    ansible.builtin.copy:
+      src: "../resultats/{{ inventory_hostname }}_report.txt"
+      dest: "{{ filename_with_timestamp }}"
+    become: no

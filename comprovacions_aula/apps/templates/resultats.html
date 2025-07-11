@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resum de Revisions dels Servidors</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .status-OK {
+            background-color: #d4edda;
+            color: #155724;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status-ERROR {
+            background-color: #f8d7da;
+            color: #721c24;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status-N_A, .status-No_Data { /* N/A i No Data */
+            background-color: #e2e3e5;
+            color: #495057;
+            text-align: center;
+        }
+        .no-results {
+            text-align: center;
+            color: #666;
+            margin-top: 50px;
+        }
+        .sticky-col {
+            position: -webkit-sticky;
+            position: sticky;
+            left: 0;
+            background-color: #fff;
+            z-index: 2;
+            box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);
+        }
+        .sticky-col.header {
+             background-color: #007bff;
+             z-index: 3;
+        }
+        .grade-column {
+            background-color: #f8f9fa; /* Fons clar per la columna de notes */
+            font-weight: bold;
+            text-align: center;
+        }
+        /* Estils per a la nota */
+        .grade-high { background-color: #c3e6cb; color: #155724; } /* Verd per notes altes */
+        .grade-medium { background-color: #fff3cd; color: #856404; } /* Groc per notes mitjanes */
+        .grade-low { background-color: #f5c6cb; color: #721c24; } /* Vermell per notes baixes */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Resum de Revisions dels Servidors</h1>
+
+        {% if not all_results %}
+            <div class="no-results">
+                <p>No s'han trobat fitxers de resultats al directori <code>{{ results_dir }}</code> o no s'han pogut processar.</p>
+                <p>Assegura't que el directori <code>results/</code> existeix i conté fitxers <code>.txt</code> amb el format correcte.</p>
+            </div>
+        {% else %}
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sticky-col header">IP Servidor</th>
+                            {% for comprovacio in comprovacions %}
+                                <th>{{ comprovacio }}</th>
+                            {% endfor %}
+                            <th class="grade-column">Nota Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ip, server_data in all_results.items() %}
+                            <tr>
+                                <td class="sticky-col">{{ ip }}</td>
+                                {% for comprovacio in comprovacions %}
+                                    {% set status = server_data.data.get(comprovacio, 'N/A') %}
+                                    <td class="status-{{ status.replace('/', '_').replace(' ', '_') }}">
+                                        {{ status }}
+                                    </td>
+                                {% endfor %}
+                                {% set grade_value = server_data.grade | replace('%', '') | float(-1) %} {# Convertim la nota a flotant per la lògica de color #}
+                                <td class="grade-column 
+                                    {% if grade_value >= 80 %}grade-high
+                                    {% elif grade_value >= 50 %}grade-medium
+                                    {% elif grade_value != -1 %}grade-low
+                                    {% endif %}">
+                                    {{ server_data.grade }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
