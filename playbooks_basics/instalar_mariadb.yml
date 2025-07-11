@@ -40,15 +40,14 @@
 
   # Definir una contrasenya per a root.
   # La informació la llegeix del fitxer de variables del servidor
-  - name: Informar la contrasenya de root
-    community.mysql.mysql_user:
-      name: root
-      host: localhost
-      password: "{{ db_root_password }}"
-      state: present
-    # Cal ignorar els errors perquè si estorna a exeuctar el playbook la contrasenya ja
-    # està canviada i dona un error (inicialment root de MariaDB no té password)
-    ignore_errors: true
+  # Es genera un fitxer a /root/.my.cnf
+  - name: Crear fitxer /root/.my.cnf amb les credencials de root
+    ansible.builtin.copy:
+      dest: /root/.my.cnf
+      content: |
+        [client]
+        user=root
+        password={{ db_root_password }}
 
   # Crear una BBDD
   - name: Crear la base de dades
