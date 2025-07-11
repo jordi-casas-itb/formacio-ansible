@@ -1,0 +1,16 @@
+# Jordi Casas - 11/07/2025
+# Task to verify if a user exists
+# Expected variables: expected_user: name of the user to check
+# Output registered: user_found
+
+# Check if user exists
+- name: Check if user '{{ expected_user }}' exists using getent
+  ansible.builtin.shell: "getent passwd {{ expected_user }}"
+  register: user_exists_check
+  changed_when: false
+  ignore_errors: true
+
+# Register user_found variable TRUE if user exists FALSE otherwise
+- name: Register variable 'user_found'
+  ansible.builtin.set_fact:
+    user_found: "{{ user_exists_check.rc == 0 }}"

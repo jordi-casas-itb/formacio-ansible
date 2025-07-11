@@ -1,0 +1,13 @@
+# Jordi Casas - 11/07/2025
+# Task to verify if a port is up
+# Expected variables: expected_port: number of the port to check
+# Output registered: port_up
+
+
+- name: Comprovar si el port de Mysql està escolant
+  ansible.builtin.shell: "netstat -an | grep :{{ expected_port }} | wc -l"
+  register: port_running
+
+- name: Register port_up True if port is up and false otherwise
+  ansible.builtin.set_fact:
+    port_up_{{expected_port}}: "{{ port_running.stdout_lines[0] | int == 1 }}"

@@ -1,0 +1,17 @@
+# Jordi Casas - 11/07/2025
+# Task to verify if a folder exists
+# Expected variables: expected_folder: path to the folder to check
+# Output registered: folder_exists_foldername
+
+
+- name: Obtenir informació del directori {{ expected_folder }}
+  ansible.builtin.stat:
+    path: "{{ expected_folder }}"
+  register: folder
+
+- name: Definir variables booleanes per a l'existència
+  ansible.builtin.set_fact:
+    # Verifica si el directori existeix
+    folder_exists{{ expected_folder | regex_replace('/', '_') | trim | lower }}: "{{ folder.stat.exists and folder.stat.isdir }}"
+    # Verifica si els permisos coincideixen amb els esperats
+    #permisos_match: "{{ directory_info.stat.mode == '0755' if directory_info.stat.exists else false }}"
