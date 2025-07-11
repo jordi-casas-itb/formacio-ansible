@@ -78,7 +78,9 @@
 
 - name: Instal·lar Docker en Alpine
   ansible.builtin.apk:
-    name: docker
+    name:
+      - docker
+      - docker-compose
     state: present
   become: yes
   when: ansible_os_family == "Alpine"

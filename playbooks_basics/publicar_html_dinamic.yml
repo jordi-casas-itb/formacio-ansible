@@ -39,7 +39,7 @@
 
   # Habilitar el mòdul rewrite
   - name: Habilitar el mòdul rewrite d'Apache
-    ansible.builtin.apache2_module:
+    community.general.apache2_module:
       name: rewrite
       state: present
     notify: Reiniciar Apache
