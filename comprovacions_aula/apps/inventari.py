@@ -25,13 +25,18 @@ def index():
         server = request.form.get('server')
         ip = request.form.get('ip')
         usuari = request.form.get('usuari')
-        contrasenya = request.form.get('contrasenya') # Nota de seguretat més avall
+        contrasenya = request.form.get('contrasenya')
+        distro_type = request.form.get('distro_type')
 
         if not all([server, ip, usuari, contrasenya]):
             error = "Falten paràmetres obligatoris: Servidor, IP, Usuari, Contrasenya."
         else:
-            # Format de línia per a l'inventari d'Ansible
-            inventory_line = f"\n{server} ansible_host={ip} ansible_user={usuari} ansible_password={contrasenya} ansible_doas_pass={contrasenya} ansible_become_method=doas\n"
+            # Generar línies diferents en funció de la distribució utilitzada
+            # Canvia el mètode per escalar privilegis
+            if distro_type == 'Ubuntu':
+                inventory_line = f"\n{server} ansible_host={ip} ansible_user={usuari} ansible_password={contrasenya} ansible_sudo_pass={contrasenya} ansible_become_method=sudo\n"
+            elif distro_type == 'Alpine':
+                inventory_line = f"\n{server} ansible_host={ip} ansible_user={usuari} ansible_password={contrasenya} ansible_doas_pass={contrasenya} ansible_become_method=doas\n"
 
             try:
                 # Afegim la línia al fitxer d'inventari
@@ -42,17 +47,7 @@ def index():
                 app.logger.error(f"Error escrivint al fitxer d'inventari: {e}")
                 error = f"No s'ha pogut escriure al fitxer d'inventari: {e}"
 
-    # Llegim les línies existents de l'inventari per mostrar-les
-    current_inventory_lines = []
-    try:
-        if os.path.exists(INVENTORY_FILE):
-            with open(INVENTORY_FILE, 'r') as f:
-                current_inventory_lines = f.readlines()
-    except Exception as e:
-        app.logger.error(f"Error llegint el fitxer d'inventari: {e}")
-        error = f"Error llegint l'inventari existent: {e}"
-
-    return render_template('index.html', message=message, error=error, inventory_lines=current_inventory_lines)
+    return render_template('index.html', message=message, error=error)
 
 
 # Endpoint opcional per a API si encara el vols mantenir
@@ -69,11 +64,16 @@ def afegir_servidor_api():
     ip = data.get('ip')
     usuari = data.get('usuari')
     contrasenya = data.get('contrasenya')
+    distro_type = data.get('distro_type')
 
     if not all([server, ip, usuari, contrasenya]):
         return jsonify({"error": "Falten paràmetres obligatoris: server, ip, usuari, contrasenya"}), 400
 
-    inventory_line = f"\n{server} ansible_host={ip} ansible_user={usuari} ansible_password={contrasenya} ansible_doas_pass={contrasenya} ansible_become_method=doas\n"
+    # Generar línies diferents en funció de la distribució utilitzada
+    if distro_type == 'Ubuntu':
+        inventory_line = f"\n{server} ansible_host={ip} ansible_user={usuari} ansible_password={contrasenya} ansible_sudo_pass={contrasenya} ansible_become_method=sudo\n"
+    elif distro_type == 'Alpine':
+        inventory_line = f"\n{server} ansible_host={ip} ansible_user={usuari} ansible_password={contrasenya} ansible_doas_pass={contrasenya} ansible_become_method=doas\n"
 
     try:
         with open(INVENTORY_FILE, 'a') as f:

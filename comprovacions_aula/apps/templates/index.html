@@ -112,24 +112,22 @@
                 <label for="contrasenya">Contrasenya SSH:</label>
                 <input type="password" id="contrasenya" name="contrasenya" required>
             </div>
+            <div>
+                <label for="distro_type">Tipus de Distribució:</label>
+                <select id="distro_type" name="distro_type" required>
+                    <option value="">Selecciona...</option>
+                    <option value="Ubuntu" selected>Ubuntu/Debian</option>
+                    <option value="Alpine">Alpine</option>
+                    </select>
+            </div>
             <button type="submit">Afegir Servidor</button>
         </form>
 
         <hr>
 
-        <h2>Contingut Actual de l'Inventari ({{ inventory_lines|length }} línies)</h2>
-        <div class="inventory-display">
-            {% if inventory_lines %}
-                {% for line in inventory_lines %}
-                    {{ line }}
-                {% endfor %}
-            {% else %}
-                <p>L'inventari està buit o no s'ha pogut carregar.</p>
-            {% endif %}
         </div>
         <p style="text-align: center; font-size: 0.9em; margin-top: 20px;">
-            **Nota de Seguretat**: L'ús de contrasenyes en text pla en l'inventari no és recomanat per a producció.
-            Considereu usar claus SSH o Ansible Vault.
+            **Nota de Seguretat**: L'ús de contrasenyes en text pla no és idoni en un entorn que no sigui de formació.
         </p>
     </div>
 </body>
