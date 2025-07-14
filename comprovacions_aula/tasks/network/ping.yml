@@ -1,0 +1,14 @@
+# Miguel Perez - 11/07/2025
+# Check connectivity to an IP via ping
+# Expected variables: target_ip: ip to check
+# Output registered: ping_X_X_X_X where X means IP byte
+
+- name: Try ping to {{ target_ip }}
+  ansible.builtin.ping:
+    data: "{{ target_ip }}"
+  register: ping_result
+  ignore_errors: true
+
+- name: Register ping result
+  ansible.builtin.set_fact:
+    ping_{{ target_ip | string | replace('.', '_') }} : "{{ not ping_result.failed }}" # True ping ok, false error

@@ -1,0 +1,10 @@
+# Carlos Alonso - 11/07/2025
+# Task to verify if hostname is correct
+# Expected variables: expected_hostname: name of the hostname
+# Output registered: hostname_match
+
+# Check hostname
+
+- name: Check if hostname matches expected value
+  set_fact:
+       hostname_match: "{{ ansible_hostname == expected_hostname }}"

@@ -1,0 +1,9 @@
+# Carlos Alonso - 11/07/2025
+# Task to verify if FQDN is correct
+# Expected variables: expected_fqdn: name of the hostname
+# Output registered: fqdn_match
+
+- name: Check if FQDN matches expected value
+  set_fact:
+       fqdn_match: "{{ ansible_fqdn == expected_fqdn }}"
+  ignore_errors: true
