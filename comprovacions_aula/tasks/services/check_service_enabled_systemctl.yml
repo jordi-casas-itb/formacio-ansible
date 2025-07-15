@@ -1,0 +1,13 @@
+# Jordi Casas - 15/07/2025
+# Task to verify if a service is enabled using systemctl
+# Expected variables: service_name
+# Output registered: service_enabled_servicename where servicename is the name service
+
+- name: Check is-enabled of a service via systemctl
+  ansible.builtin.command: "systemctl is-enabled {{ service_name }}"
+  register: service_enabled_check
+  ignore_errors: true
+
+- name: Determine if service is enabled
+  set_fact:
+    service_enabled_{{ service_name | replace('.', '_')}}: "{{ service_enabled_check.rc == 0 }}"

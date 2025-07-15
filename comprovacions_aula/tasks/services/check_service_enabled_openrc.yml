@@ -1,0 +1,16 @@
+# Jordi Casas - 15/07/2025
+# Task to verify if a service is enabled using openrc
+# Expected variables: service_name
+# Output registered: service_enabled_servicename where servicename is the name service
+
+- name: Check is-enabled of a service via openrc
+  ansible.builtin.command: "rc-update show"
+  register: rc_update_output
+
+- name: Determine if service is enabled
+  ansible.builtin.set_fact:
+    "service_enabled_{{ service_name | replace('.', '_') }}": |
+      {{ service_name in rc_update_output.stdout and (
+         '| default' in rc_update_output.stdout or
+         '| boot' in rc_update_output.stdout
+      ) }}
