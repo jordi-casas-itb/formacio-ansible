@@ -48,6 +48,24 @@
       expected_folder: /opt/dades
       expected_permissions: '0755'
 
+  # Comprovar ping a 8.8.8.8
+  - name: Ping a 8.8.8.8
+    ansible.builtin.import_tasks: ../tasks/network/ping.yml
+    vars:
+      target_ip: 8.8.8.8
+
+  # Comprovar hostname
+  - name: Comprovar hostname
+    ansible.builtin.import_tasks: ../tasks/system/check_hostname.yml
+    vars:
+      expected_hostname: "ubuntusrv"
+
+  # Comprovar servei ssh
+  - name: Comprovar servei ssh
+    ansible.builtin.import_tasks: ../tasks/services/check_service_enabled_openrc.yml
+    vars:
+      service_name: "sshd"
+
   # Generar la taula de resum per a cada check
   - name: Preparar informe de revisió en format taula
     ansible.builtin.set_fact:
@@ -62,6 +80,9 @@
         | Port Flask arrencat                            | {{ 'OK' if port_up_5000 else 'ERROR' }}
         | Existeix el directori /opt/dades               | {{ 'OK' if folder_exists_opt_dades else 'ERROR' }}
         | Permisos a /opt/dades 0755                     | {{ 'OK' if folder_permissions_opt_dades else 'ERROR' }}
+        | Ping ip 8.8.8.8                                | {{ 'OK' if ping_8_8_8_8 else 'ERROR' }}
+        | Comprovar hostname                             | {{ 'OK' if hostname_match else 'ERROR' }}
+        | Comprovar servei sshd                          | {{ 'OK' if service_enabled_sshd else 'ERROR' }}
         ----------------------------------------------------------------------------------------------------
 
   # Guardar el timestamp de la generació del fitxer. Es fa servir quan s'envia a la màquina d'origen per saber els resultats
