@@ -1,0 +1,54 @@
+# Jordi Casas - 18/07/2025
+# Playbook per provar el connector amb sistemes Windows via SSH
+---
+- name: Proves amb diferents tasques sbore sistema Windows
+  hosts: windows
+  gather_facts: no # Descomentar aquesta línia si dona problemes al llegir els facts del sistema
+
+  # Definició de variables utilitzades a les tasques
+  vars:
+    test_file_path: "C:\\Users\\Administrator\\prova.txt"
+    user_to_check: "Administrator"
+
+  # Tasques sobre sistemes windows - A ampliar
+  tasks:
+  # Provar el ping
+  - name: Comprovar connectivitat amb win_ping
+    ansible.windows.win_ping:
+
+  # Obtenir els facts de l'equip
+  - name: Obtenir facts
+    ansible.builtin.setup:
+    register: windows_facts
+
+  # Mostrar els facts obtinguts
+  - ansible.builtin.debug:
+      msg: "{{ windows_facts }}"
+
+  # Copiar un fitxer al servidor
+  - name: Copiar un fitxer a l'equip Windows
+    ansible.windows.win_copy:
+      content: "Aquest és un fitxer de prova creat per Ansible el {{ ansible_date_time.iso8601_micro }}.\n"
+      dest: "{{ test_file_path }}"
+
+  # Verificar que existeix un usuari.
+  - name: Comprovar l'existència de l'usuari '{{ user_to_check }}'
+    ansible.windows.win_user:
+      name: "{{ user_to_check }}"
+      state: present
+    check_mode: yes # Al activar el check_mode no realitza els canvis, només comprova
+    register: user_check_result
+    ignore_errors: true # Evitar que pari el playbook si l'usuari no existeix
+
+  # Mostrar el resultat de la comprovació amb els atributs de l'usuari
+  - ansible.builtin.debug:
+      msg: "{{ user_check_result }}"
+
+  # Crear un usuari local
+  - name: Crear l'usuari jordi afegint-lo al grup administradors
+    ansible.windows.win_user:
+      name: jordi
+      password: T3emp0ral_2025!
+      state: present
+      groups:
+        - Administrators
